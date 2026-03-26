@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 import fear_greed
 
 # File path
-CSV_PATH = "data/fear_greed.csv"
+CSV_PATH = "data/us_market_fear_greed.csv"
 HEADERS = ["date", "score", "rating"]
 
 def get_et_date():
