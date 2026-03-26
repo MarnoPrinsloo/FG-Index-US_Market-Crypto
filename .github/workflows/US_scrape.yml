@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install fear-greed
 
-      - name: Run scraper
+      - name: Run us_market_scraper
         run: python us_market_scrape.py
 
       - name: Commit and push CSV
