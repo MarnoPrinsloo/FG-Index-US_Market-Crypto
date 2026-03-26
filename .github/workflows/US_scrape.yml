@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/fear_greed.csv
+          git add data/us_market_fear_greed.csv
           git diff --cached --quiet || git commit -m "chore: update fear & greed index $(date +'%Y-%m-%d')"
           git push
