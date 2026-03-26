@@ -2,7 +2,7 @@ name: Daily Fear & Greed Scrape
 
 on:
   schedule:
-    - cron: "0 21 * * 1-5"  # 4:00 PM ET (21:00 UTC), weekdays only
+    - cron: "15 14 * * 1-5"  # 9:15 AM ET (14:15 UTC), weekdays only
   workflow_dispatch:          # allows manual trigger from GitHub UI
 
 jobs:
