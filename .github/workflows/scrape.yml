@@ -2,15 +2,19 @@ name: Daily Fear & Greed Scrape
 
 on:
   schedule:
-    - cron: "15 14 * * 1-5"  # 9:15 AM ET (14:15 UTC), weekdays only
+    - cron: "15 14 * * 1-5"  # 9:15 AM ET (14:15 UTC) — weekdays only (US market)
+    - cron: "15 14 * * *"    # 9:15 AM UTC — every day (crypto)
   workflow_dispatch:          # allows manual trigger from GitHub UI
 
 jobs:
-  scrape:
+
+  scrape_us_market:
+    name: US Market Fear & Greed (weekdays only)
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '15 14 * * 1-5'
 
     permissions:
-      contents: write  # needed to commit the CSV back to the repo
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -22,15 +26,46 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install fear-greed requests
+        run: pip install fear-greed
 
-      - name: Run scraper
-        run: python scrape.py
+      - name: Run US market scraper
+        run: python scrape_us.py
 
       - name: Commit and push CSV
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "chore: update fear & greed index $(date +'%Y-%m-%d')"
+          git diff --cached --quiet || git commit -m "chore: update US market fear & greed $(date +'%Y-%m-%d')"
+          git push
+
+  scrape_crypto:
+    name: Crypto Fear & Greed (every day)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '15 14 * * *'
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run crypto scraper
+        run: python scrape_crypto.py
+
+      - name: Commit and push CSV
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "chore: update crypto fear & greed $(date +'%Y-%m-%d')"
           git push
