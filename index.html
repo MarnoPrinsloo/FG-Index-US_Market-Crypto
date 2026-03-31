@@ -502,6 +502,11 @@ async function main() {
       fetchCSV(CSV_US),
     ]);
 
+    console.log('=== RAW CRYPTO CSV (first 300 chars) ===');
+    console.log(cryptoText.slice(0, 300));
+    console.log('=== RAW US CSV (first 300 chars) ===');
+    console.log(usText.slice(0, 300));
+
     const cryptoRows = parseCSV(cryptoText);
     const usRows     = parseCSV(usText);
 
