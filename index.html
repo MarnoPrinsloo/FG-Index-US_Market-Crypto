@@ -294,7 +294,7 @@ const CSV_CRYPTO   = 'data/crypto_fear_greed.csv';   // adjust as needed
 const CSV_US       = 'data/us_market_fear_greed.csv';        // adjust as needed
 
 const RAW = (path) =>
-  `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/${path}`;
+  `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -478,9 +478,16 @@ function fgLineDataset(label, color, scores) {
 // ─────────────────────────────────────────────
 async function main() {
   try {
+    const fetchCSV = async (path) => {
+      const r = await fetch(RAW(path));
+      if (!r.ok) throw new Error(`CSV not found: ${path}`);
+      const json = await r.json();
+      return atob(json.content.replace(/\n/g, ''));
+    };
+
     const [cryptoText, usText] = await Promise.all([
-      fetch(RAW(CSV_CRYPTO)).then(r => { if (!r.ok) throw new Error('Crypto CSV not found'); return r.text(); }),
-      fetch(RAW(CSV_US)).then(r => { if (!r.ok) throw new Error('US CSV not found'); return r.text(); }),
+      fetchCSV(CSV_CRYPTO),
+      fetchCSV(CSV_US),
     ]);
 
     const cryptoRows = parseCSV(cryptoText);
