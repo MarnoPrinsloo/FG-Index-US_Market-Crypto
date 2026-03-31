@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
+
     :root {
       --bg:        #080b10;
       --surface:   #0e1318;
@@ -207,6 +208,75 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+  
+
+    /* ── Section headers ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 40px 48px 0;
+      margin-bottom: 28px;
+    }
+    .section-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-family: 'Space Mono', monospace;
+    }
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 48px 48px 0;
+    }
+
+    /* ── Stat labels row ── */
+    .stat-row {
+      display: flex;
+      gap: 16px;
+      padding: 0 48px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px 22px;
+      flex: 1;
+      min-width: 150px;
+    }
+    .stat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 8px;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+    .stat-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -223,65 +293,100 @@
 
 <div id="main" style="display:none">
 
-  <!-- Scorecards -->
-  <div class="scorecards">
-    <div class="card">
-      <div class="card-label">Crypto FG · Today</div>
-      <div class="card-value" id="sc-crypto">—</div>
-      <div class="card-sub" id="sc-crypto-label">—</div>
+  <!-- ══════════════════════════════════════ -->
+  <!-- CRYPTO SECTION                        -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--crypto)"></div>
+    <div class="section-title" style="color:var(--crypto)">Crypto — Alternative.me</div>
+    <div class="section-line"></div>
+  </div>
+
+  <!-- Crypto stat labels -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Fear &amp; Greed Index</div>
+      <div class="stat-value" id="sc-crypto">—</div>
+      <div class="stat-sub" id="sc-crypto-label">—</div>
     </div>
-    <div class="card">
-      <div class="card-label">US Market FG · Today</div>
-      <div class="card-value" id="sc-us">—</div>
-      <div class="card-sub" id="sc-us-label">—</div>
+    <div class="stat-card">
+      <div class="stat-label">FG Cadence</div>
+      <div class="stat-value" id="sc-cad-crypto">—</div>
+      <div class="stat-sub">score(now) − score(90d ago)</div>
     </div>
-    <div class="card">
-      <div class="card-label">Crypto Cadence · Today</div>
-      <div class="card-value" id="sc-cad-crypto">—</div>
-      <div class="card-sub">score(now) − score(90d ago)</div>
-    </div>
-    <div class="card">
-      <div class="card-label">US Cadence · Today</div>
-      <div class="card-value" id="sc-cad-us">—</div>
-      <div class="card-sub">score(now) − score(90d ago)</div>
+    <div class="stat-card">
+      <div class="stat-label">FG Cadence 60d SMA</div>
+      <div class="stat-value" id="sc-sma-crypto">—</div>
+      <div class="stat-sub">60-day avg of cadence</div>
     </div>
   </div>
 
-  <div class="legend" style="margin-top:28px;">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--crypto)"></div>Crypto (Alternative.me)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--us)"></div>US Market (CNN)</div>
-  </div>
-
+  <!-- Crypto charts -->
   <div class="charts">
-
-    <!-- Chart 1a: Crypto FG -->
     <div class="chart-block">
       <div class="chart-label">Chart 1A</div>
-      <div class="chart-title">Crypto Fear &amp; Greed Score</div>
+      <div class="chart-title">Crypto Fear &amp; Greed Index</div>
       <div class="chart-desc">Alternative.me · Daily · 0 = Extreme Fear · 100 = Extreme Greed</div>
       <div class="canvas-wrap"><canvas id="chart-crypto"></canvas></div>
     </div>
+    <div class="chart-block">
+      <div class="chart-label">Chart 2A</div>
+      <div class="chart-title">Crypto FG Cadence &amp; 60d SMA</div>
+      <div class="chart-desc">Score(now) − Score(90d ago) · Bars = Cadence · Line = 60d SMA</div>
+      <div class="canvas-wrap" style="height:280px;"><canvas id="chart-cadence-crypto"></canvas></div>
+    </div>
+  </div>
 
-    <!-- Chart 1b: US FG -->
+  <div class="section-divider"></div>
+
+  <!-- ══════════════════════════════════════ -->
+  <!-- US MARKETS SECTION                    -->
+  <!-- ══════════════════════════════════════ -->
+  <div class="section-header">
+    <div class="section-dot" style="background:var(--us)"></div>
+    <div class="section-title" style="color:var(--us)">US Markets — CNN</div>
+    <div class="section-line"></div>
+  </div>
+
+  <!-- US stat labels -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Fear &amp; Greed Index</div>
+      <div class="stat-value" id="sc-us">—</div>
+      <div class="stat-sub" id="sc-us-label">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">FG Cadence</div>
+      <div class="stat-value" id="sc-cad-us">—</div>
+      <div class="stat-sub">score(now) − score(90d ago)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">FG Cadence 60d SMA</div>
+      <div class="stat-value" id="sc-sma-us">—</div>
+      <div class="stat-sub">60-day avg of cadence</div>
+    </div>
+  </div>
+
+  <!-- US charts -->
+  <div class="charts">
     <div class="chart-block">
       <div class="chart-label">Chart 1B</div>
-      <div class="chart-title">US Market Fear &amp; Greed Score</div>
+      <div class="chart-title">US Market Fear &amp; Greed Index</div>
       <div class="chart-desc">CNN · Daily · 0 = Extreme Fear · 100 = Extreme Greed</div>
       <div class="canvas-wrap"><canvas id="chart-us"></canvas></div>
     </div>
-
-    <!-- Chart 2: Cadence -->
     <div class="chart-block">
-      <div class="chart-label">Chart 2</div>
-      <div class="chart-title">FG Cadence</div>
-      <div class="chart-desc">Score(now) − Score(90d ago) · bars · 60-day SMA overlay</div>
-      <div class="canvas-wrap" style="height:280px;"><canvas id="chart-cadence"></canvas></div>
+      <div class="chart-label">Chart 2B</div>
+      <div class="chart-title">US FG Cadence &amp; 60d SMA</div>
+      <div class="chart-desc">Score(now) − Score(90d ago) · Bars = Cadence · Line = 60d SMA</div>
+      <div class="canvas-wrap" style="height:280px;"><canvas id="chart-cadence-us"></canvas></div>
     </div>
-
   </div>
+
 </div>
 
 <script>
+
 // ─────────────────────────────────────────────
 // CONFIG — update these to your repo paths
 // ─────────────────────────────────────────────
@@ -502,11 +607,6 @@ async function main() {
       fetchCSV(CSV_US),
     ]);
 
-    console.log('=== RAW CRYPTO CSV (first 300 chars) ===');
-    console.log(cryptoText.slice(0, 300));
-    console.log('=== RAW US CSV (first 300 chars) ===');
-    console.log(usText.slice(0, 300));
-
     const cryptoRows = parseCSV(cryptoText);
     const usRows     = parseCSV(usText);
 
@@ -537,6 +637,27 @@ async function main() {
     cadEl2.textContent = (latestUsCad.cadence > 0 ? '+' : '') + latestUsCad.cadence.toFixed(1);
     cadEl2.style.color = latestUsCad.cadence >= 0 ? '#22d87a' : '#ff4d6d';
 
+    // ── Cadence SMA stat cards ──
+    const cryptoCadValues = cryptoCadRows.map(r => r.cadence);
+    const usCadValues     = usCadRows.map(r => r.cadence);
+    const cryptoSMAArr    = sma(cryptoCadValues, 60);
+    const usSMAArr        = sma(usCadValues, 60);
+
+    const latestCryptoSMA = cryptoSMAArr.filter(v => v !== null).at(-1);
+    const latestUsSMA     = usSMAArr.filter(v => v !== null).at(-1);
+
+    const smaEl1 = document.getElementById('sc-sma-crypto');
+    if (latestCryptoSMA !== undefined) {
+      smaEl1.textContent = (latestCryptoSMA > 0 ? '+' : '') + latestCryptoSMA.toFixed(1);
+      smaEl1.style.color = latestCryptoSMA >= 0 ? '#22d87a' : '#ff4d6d';
+    }
+
+    const smaEl2 = document.getElementById('sc-sma-us');
+    if (latestUsSMA !== undefined) {
+      smaEl2.textContent = (latestUsSMA > 0 ? '+' : '') + latestUsSMA.toFixed(1);
+      smaEl2.style.color = latestUsSMA >= 0 ? '#22d87a' : '#ff4d6d';
+    }
+
     // ── Last updated ──
     document.getElementById('last-updated').textContent =
       `Updated: ${latestCrypto.date}`;
@@ -555,16 +676,15 @@ async function main() {
       fgLineDataset('US Market FG', '#00c8ff', usRows.map(r => r.score)),
     );
 
-    // ── Chart 2 — Cadence (combined — use crypto dates as spine) ──
-    // Build a merged cadence using crypto as the primary axis,
-    // but you can swap to US or plot them separately if preferred.
-    // For a single cadence chart we plot crypto cadence + SMA.
-    // Adjust if you want to overlay both series.
-    const cadLabels  = cryptoCadRows.map(r => r.date);
-    const cadValues  = cryptoCadRows.map(r => r.cadence);
-    const cadSMA     = sma(cadValues, 60);
+    // ── Chart 2A — Crypto Cadence ──
+    const cryptoCadLabels = cryptoCadRows.map(r => r.date);
+    const cryptoSMAFull   = sma(cryptoCadValues, 60);
+    makeCadenceChart('chart-cadence-crypto', cryptoCadLabels, cryptoCadValues, cryptoSMAFull);
 
-    makeCadenceChart('chart-cadence', cadLabels, cadValues, cadSMA);
+    // ── Chart 2B — US Cadence ──
+    const usCadLabels = usCadRows.map(r => r.date);
+    const usSMAFull   = sma(usCadValues, 60);
+    makeCadenceChart('chart-cadence-us', usCadLabels, usCadValues, usSMAFull);
 
     // ── Show dashboard ──
     document.getElementById('loading').style.display = 'none';
@@ -581,6 +701,7 @@ async function main() {
 }
 
 main();
+
 </script>
 </body>
 </html>
