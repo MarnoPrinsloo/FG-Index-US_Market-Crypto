@@ -318,8 +318,20 @@ const fgColor = (v) => {
 function parseCSV(text) {
   const result = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
   return result.data
-    .map(r => ({ date: r.date?.trim(), score: parseFloat(r.score) }))
-    .filter(r => r.date && !isNaN(r.score))
+    .map(r => {
+      // Support DD/MM/YYYY and YYYY-MM-DD
+      const raw = r.date?.trim();
+      if (!raw) return null;
+      let iso;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
+        const [dd, mm, yyyy] = raw.split('/');
+        iso = `${yyyy}-${mm}-${dd}`;
+      } else {
+        iso = raw; // assume already ISO
+      }
+      return { date: iso, score: parseFloat(r.score) };
+    })
+    .filter(r => r && r.date && !isNaN(r.score))
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
