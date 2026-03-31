@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fear & Greed Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #080b10;
+      --surface:   #0e1318;
+      --border:    #1c2530;
+      --muted:     #3a4a5a;
+      --text:      #c8d8e8;
+      --dim:       #6a8098;
+      --crypto:    #f7931a;
+      --us:        #00c8ff;
+      --cadence-pos: #22d87a;
+      --cadence-neg: #ff4d6d;
+      --sma:       #f0e060;
+      --accent:    #ffffff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 36px 48px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+    }
+    .header-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .header-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .header-updated {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-left: auto;
+      align-self: center;
+    }
+
+    /* ── Legend pill ── */
+    .legend {
+      display: flex;
+      gap: 20px;
+      padding: 0 48px 0;
+      margin-top: 24px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Charts ── */
+    .charts {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 32px 48px 0;
+    }
+
+    .chart-block {
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 40px;
+    }
+    .chart-block:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .chart-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .chart-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .chart-desc {
+      font-size: 13px;
+      color: var(--dim);
+      margin-bottom: 24px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 240px;
+    }
+    canvas { display: block; }
+
+    /* ── Scorecards ── */
+    .scorecards {
+      display: flex;
+      gap: 16px;
+      padding: 28px 48px 0;
+      flex-wrap: wrap;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 18px 24px;
+      min-width: 160px;
+      flex: 1;
+    }
+    .card-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--dim);
+      margin-bottom: 8px;
+    }
+    .card-value {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--accent);
+    }
+    .card-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ── Loading / Error ── */
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .dot-pulse::after {
+      content: '';
+      animation: dots 1.2s steps(3, end) infinite;
+    }
+    @keyframes dots {
+      0%   { content: ''; }
+      33%  { content: '.'; }
+      66%  { content: '..'; }
+      100% { content: '...'; }
+    }
+
+    /* zone bands label */
+    .zone-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+    .zone-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-subtitle">Market Sentiment</div>
+    <div class="header-title">Fear &amp; Greed Dashboard</div>
+  </div>
+  <div class="header-updated" id="last-updated">—</div>
+</header>
+
+<div id="loading"><span class="dot-pulse">Loading data</span></div>
+
+<div id="main" style="display:none">
+
+  <!-- Scorecards -->
+  <div class="scorecards">
+    <div class="card">
+      <div class="card-label">Crypto FG · Today</div>
+      <div class="card-value" id="sc-crypto">—</div>
+      <div class="card-sub" id="sc-crypto-label">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">US Market FG · Today</div>
+      <div class="card-value" id="sc-us">—</div>
+      <div class="card-sub" id="sc-us-label">—</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Crypto Cadence · Today</div>
+      <div class="card-value" id="sc-cad-crypto">—</div>
+      <div class="card-sub">score(now) − score(90d ago)</div>
+    </div>
+    <div class="card">
+      <div class="card-label">US Cadence · Today</div>
+      <div class="card-value" id="sc-cad-us">—</div>
+      <div class="card-sub">score(now) − score(90d ago)</div>
+    </div>
+  </div>
+
+  <div class="legend" style="margin-top:28px;">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--crypto)"></div>Crypto (Alternative.me)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--us)"></div>US Market (CNN)</div>
+  </div>
+
+  <div class="charts">
+
+    <!-- Chart 1a: Crypto FG -->
+    <div class="chart-block">
+      <div class="chart-label">Chart 1A</div>
+      <div class="chart-title">Crypto Fear &amp; Greed Score</div>
+      <div class="chart-desc">Alternative.me · Daily · 0 = Extreme Fear · 100 = Extreme Greed</div>
+      <div class="canvas-wrap"><canvas id="chart-crypto"></canvas></div>
+    </div>
+
+    <!-- Chart 1b: US FG -->
+    <div class="chart-block">
+      <div class="chart-label">Chart 1B</div>
+      <div class="chart-title">US Market Fear &amp; Greed Score</div>
+      <div class="chart-desc">CNN · Daily · 0 = Extreme Fear · 100 = Extreme Greed</div>
+      <div class="canvas-wrap"><canvas id="chart-us"></canvas></div>
+    </div>
+
+    <!-- Chart 2: Cadence -->
+    <div class="chart-block">
+      <div class="chart-label">Chart 2</div>
+      <div class="chart-title">FG Cadence</div>
+      <div class="chart-desc">Score(now) − Score(90d ago) · bars · 60-day SMA overlay</div>
+      <div class="canvas-wrap" style="height:280px;"><canvas id="chart-cadence"></canvas></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — update these to your repo paths
+// ─────────────────────────────────────────────
+const GITHUB_USER  = 'MarnoPrinsloo';
+const GITHUB_REPO  = 'FG-Index-US_Market-Crypto';
+const BRANCH       = 'main';
+
+// Path inside repo to each CSV
+const CSV_CRYPTO   = 'data/crypto_fear_greed.csv';   // adjust as needed
+const CSV_US       = 'data/us_market_fear_greed.csv';        // adjust as needed
+
+const RAW = (path) =>
+  `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}/${path}`;
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+const fgLabel = (v) => {
+  if (v >= 75) return 'Extreme Greed';
+  if (v >= 55) return 'Greed';
+  if (v >= 45) return 'Neutral';
+  if (v >= 25) return 'Fear';
+  return 'Extreme Fear';
+};
+
+const fgColor = (v) => {
+  if (v >= 75) return '#22d87a';
+  if (v >= 55) return '#a3e635';
+  if (v >= 45) return '#facc15';
+  if (v >= 25) return '#fb923c';
+  return '#ff4d6d';
+};
+
+function parseCSV(text) {
+  const result = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
+  return result.data
+    .map(r => ({ date: r.date?.trim(), score: parseFloat(r.score) }))
+    .filter(r => r.date && !isNaN(r.score))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function computeCadence(rows) {
+  // cadence[i] = score[i] - score[i - 90d]
+  // We use index-based lookup after building a date→score map
+  const map = {};
+  rows.forEach(r => { map[r.date] = r.score; });
+
+  return rows.map(r => {
+    const d = new Date(r.date);
+    d.setDate(d.getDate() - 90);
+    const key = d.toISOString().slice(0, 10);
+    const prev = map[key];
+    return { date: r.date, cadence: prev !== undefined ? r.score - prev : null };
+  }).filter(r => r.cadence !== null);
+}
+
+function sma(arr, n) {
+  return arr.map((_, i) => {
+    if (i < n - 1) return null;
+    const slice = arr.slice(i - n + 1, i + 1);
+    return slice.reduce((a, b) => a + b, 0) / n;
+  });
+}
+
+// ─────────────────────────────────────────────
+// Chart defaults
+// ─────────────────────────────────────────────
+Chart.defaults.color = '#6a8098';
+Chart.defaults.font.family = "'Space Mono', monospace";
+Chart.defaults.font.size = 10;
+
+const gridOpts = {
+  color: '#1c2530',
+  drawBorder: false,
+};
+const tickOpts = {
+  maxRotation: 0,
+  autoSkipPadding: 40,
+};
+
+function makeLineChart(id, labels, dataset1, dataset2) {
+  const ctx = document.getElementById(id).getContext('2d');
+  const datasets = [dataset1];
+  if (dataset2) datasets.push(dataset2);
+  return new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0e1318',
+          borderColor: '#1c2530',
+          borderWidth: 1,
+          titleColor: '#6a8098',
+          bodyColor: '#c8d8e8',
+          padding: 10,
+        },
+        // zone bands
+        annotation: undefined,
+      },
+      scales: {
+        x: { grid: gridOpts, ticks: tickOpts },
+        y: {
+          grid: gridOpts,
+          min: 0, max: 100,
+          ticks: { stepSize: 25 },
+        },
+      },
+    },
+  });
+}
+
+function makeCadenceChart(id, labels, cadenceData, smaData) {
+  const ctx = document.getElementById(id).getContext('2d');
+
+  // color bars by positive/negative
+  const barColors = cadenceData.map(v =>
+    v >= 0 ? 'rgba(34,216,122,0.65)' : 'rgba(255,77,109,0.65)'
+  );
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'FG Cadence',
+          data: cadenceData,
+          backgroundColor: barColors,
+          borderColor: barColors,
+          borderWidth: 0,
+          borderRadius: 2,
+          order: 2,
+        },
+        {
+          label: '60d SMA',
+          data: smaData,
+          type: 'line',
+          borderColor: '#f0e060',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          order: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#0e1318',
+          borderColor: '#1c2530',
+          borderWidth: 1,
+          titleColor: '#6a8098',
+          bodyColor: '#c8d8e8',
+          padding: 10,
+        },
+      },
+      scales: {
+        x: { grid: gridOpts, ticks: tickOpts },
+        y: {
+          grid: gridOpts,
+          ticks: {},
+        },
+      },
+    },
+  });
+}
+
+function fgLineDataset(label, color, scores) {
+  return {
+    label,
+    data: scores,
+    borderColor: color,
+    borderWidth: 2,
+    pointRadius: 0,
+    tension: 0.2,
+    fill: false,
+  };
+}
+
+// ─────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────
+async function main() {
+  try {
+    const [cryptoText, usText] = await Promise.all([
+      fetch(RAW(CSV_CRYPTO)).then(r => { if (!r.ok) throw new Error('Crypto CSV not found'); return r.text(); }),
+      fetch(RAW(CSV_US)).then(r => { if (!r.ok) throw new Error('US CSV not found'); return r.text(); }),
+    ]);
+
+    const cryptoRows = parseCSV(cryptoText);
+    const usRows     = parseCSV(usText);
+
+    // ── Scorecards ──
+    const latestCrypto = cryptoRows.at(-1);
+    const latestUs     = usRows.at(-1);
+
+    document.getElementById('sc-crypto').textContent = latestCrypto.score;
+    document.getElementById('sc-crypto').style.color = fgColor(latestCrypto.score);
+    document.getElementById('sc-crypto-label').textContent = fgLabel(latestCrypto.score);
+
+    document.getElementById('sc-us').textContent = latestUs.score;
+    document.getElementById('sc-us').style.color = fgColor(latestUs.score);
+    document.getElementById('sc-us-label').textContent = fgLabel(latestUs.score);
+
+    // ── Cadence ──
+    const cryptoCadRows = computeCadence(cryptoRows);
+    const usCadRows     = computeCadence(usRows);
+
+    const latestCryptoCad = cryptoCadRows.at(-1);
+    const latestUsCad     = usCadRows.at(-1);
+
+    const cadEl1 = document.getElementById('sc-cad-crypto');
+    cadEl1.textContent = (latestCryptoCad.cadence > 0 ? '+' : '') + latestCryptoCad.cadence.toFixed(1);
+    cadEl1.style.color = latestCryptoCad.cadence >= 0 ? '#22d87a' : '#ff4d6d';
+
+    const cadEl2 = document.getElementById('sc-cad-us');
+    cadEl2.textContent = (latestUsCad.cadence > 0 ? '+' : '') + latestUsCad.cadence.toFixed(1);
+    cadEl2.style.color = latestUsCad.cadence >= 0 ? '#22d87a' : '#ff4d6d';
+
+    // ── Last updated ──
+    document.getElementById('last-updated').textContent =
+      `Updated: ${latestCrypto.date}`;
+
+    // ── Chart 1A — Crypto ──
+    makeLineChart(
+      'chart-crypto',
+      cryptoRows.map(r => r.date),
+      fgLineDataset('Crypto FG', '#f7931a', cryptoRows.map(r => r.score)),
+    );
+
+    // ── Chart 1B — US ──
+    makeLineChart(
+      'chart-us',
+      usRows.map(r => r.date),
+      fgLineDataset('US Market FG', '#00c8ff', usRows.map(r => r.score)),
+    );
+
+    // ── Chart 2 — Cadence (combined — use crypto dates as spine) ──
+    // Build a merged cadence using crypto as the primary axis,
+    // but you can swap to US or plot them separately if preferred.
+    // For a single cadence chart we plot crypto cadence + SMA.
+    // Adjust if you want to overlay both series.
+    const cadLabels  = cryptoCadRows.map(r => r.date);
+    const cadValues  = cryptoCadRows.map(r => r.cadence);
+    const cadSMA     = sma(cadValues, 60);
+
+    makeCadenceChart('chart-cadence', cadLabels, cadValues, cadSMA);
+
+    // ── Show dashboard ──
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+
+  } catch (err) {
+    document.getElementById('loading').innerHTML =
+      `<span style="color:#ff4d6d;font-family:'Space Mono',monospace;font-size:12px;">
+        Error loading data: ${err.message}<br><br>
+        <span style="color:#3a4a5a;">Check that GITHUB_USER, GITHUB_REPO, and CSV paths are set correctly,<br>
+        and that your repo is public.</span>
+      </span>`;
+  }
+}
+
+main();
+</script>
+</body>
+</html>
